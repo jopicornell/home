@@ -1,0 +1,83 @@
+org: joanpicornell
+app: thermonick-back
+service: thermonick-back
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  environment:
+    NODE_ENV: ${opt:stage, self:provider.stage}
+    TEMPERATURE_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  lambdaHashingVersion: 20201221
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+          Resource: "*"
+  apiGateway:
+    shouldStartNameWithService: true
+
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      inMemory: true
+      migrate: true
+    seed:
+      dev:
+        sources:
+          - table: ${self:provider.environment.TEMPERATURE_TABLE}
+            rawsources: [ ./temperatures-seed.json ]
+
+resources:
+  Resources:
+    CandidatesDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: "id"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: "NEW_AND_OLD_IMAGES"
+        TableName: ${self:provider.environment.TEMPERATURE_TABLE}
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-dynamodb-local
+  - serverless-offline
+
+package:
+  exclude:
+    - config/.env.stg
+    - config/.env.pro
+  include:
+    - config/.env.dev
+
+functions:
+  create:
+    handler: app/handler.create
+    memorySize: 128
+    events:
+      - http:
+          path: temperatures
+          method: post
+  find:
+    handler: app/handler.find
+    memorySize: 128
+    events:
+      - http:
+          path: temperatures
+          method: get
