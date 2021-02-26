@@ -32,4 +32,5 @@ export const create: Handler = (event: any, context: Context) => {
   return temperatureController.create(event, context);
 };
 
-export const find: Handler = () => temperatureController.find();
+export const find: Handler = (event: any, context: Context) =>
+  temperatureController.find(event, context);

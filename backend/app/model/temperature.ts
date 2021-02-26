@@ -1,4 +1,4 @@
-import { Model, PartitionKey } from '@shiftcoders/dynamo-easy';
+import { GSIPartitionKey, GSISortKey, Model, PartitionKey } from '@shiftcoders/dynamo-easy'
 import { v4 as uuidv4 } from 'uuid';
 
 interface TemperatureRequestJSON {
@@ -14,13 +14,22 @@ console.log(process.env.TEMPERATURE_TABLE);
 class Temperature {
   @PartitionKey()
   public id: string;
+
+  @GSIPartitionKey('DateIndex')
+  @GSISortKey('TypeIndex')
+  public type: string;
+  @GSIPartitionKey('TypeIndex')
+  @GSISortKey('DateIndex')
+  public date: string;
   constructor(
     id: string,
     public temperature: number,
-    public type: string,
-    public date: string,
+    type: string,
+    date: string,
   ) {
     this.id = id;
+    this.type = type;
+    this.date = date;
   }
 
   static fromJSON(requestJSON: TemperatureRequestJSON): Temperature {

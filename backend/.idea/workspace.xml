@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="946ff0e1-0e40-4096-b76d-a9f2861ad1ec" name="Default Changelist" comment="" />
+    <list default="true" id="946ff0e1-0e40-4096-b76d-a9f2861ad1ec" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../iot/go.mod" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../iot/main.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -15,7 +18,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ProjectId" id="1oZvyvsbQdFmIRAtE2NCKDVeZCn" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -56,10 +59,24 @@
       <updated>1613507184957</updated>
       <workItem from="1613507186324" duration="1622000" />
       <workItem from="1613849612477" duration="11444000" />
+      <workItem from="1613914653323" duration="2420000" />
+      <workItem from="1613930780964" duration="11686000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>

@@ -4,7 +4,10 @@
     "emitDecoratorMetadata": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "lib": ["esnext"],
+    "lib": [
+      "esnext",
+      "dom"
+    ],
     "types": ["reflect-metadata"],
     "module": "commonjs",
     "moduleResolution": "node",

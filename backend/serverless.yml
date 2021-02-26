@@ -4,6 +4,7 @@ service: thermonick-back
 
 provider:
   name: aws
+  region: eu-central-1
   runtime: nodejs12.x
   environment:
     NODE_ENV: ${opt:stage, self:provider.stage}
@@ -37,16 +38,43 @@ custom:
 
 resources:
   Resources:
-    CandidatesDynamoDbTable:
+    TemperaturesDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
           - AttributeName: "id"
             AttributeType: "S"
+          - AttributeName: date
+            AttributeType: S
+          - AttributeName: type
+            AttributeType: S
         KeySchema:
           - AttributeName: "id"
             KeyType: "HASH"
+        GlobalSecondaryIndexes:
+          - IndexName: TypeIndex
+            KeySchema:
+              - AttributeName: date
+                KeyType: HASH
+              - AttributeName: type
+                KeyType: RANGE
+            Projection:
+              ProjectionType: 'ALL'
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: DateIndex
+            KeySchema:
+              - AttributeName: type
+                KeyType: HASH
+              - AttributeName: date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: 'ALL'
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -81,3 +109,8 @@ functions:
       - http:
           path: temperatures
           method: get
+  checkHealth:
+    handler: app/handler.checkHealth
+    memorySize: 128
+    events:
+      - schedule: rate(15 minutes)

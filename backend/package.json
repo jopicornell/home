@@ -15,11 +15,11 @@
   ],
   "dependencies": {
     "@shiftcoders/dynamo-easy": "^7.1.0",
+    "date-fns": "^2.17.0",
     "dotenv": "^8.2.0",
     "http-status-codes": "^2.1.4",
     "inversify": "^5.0.5",
     "reflect-metadata": "^0.1.13",
-    "serverless-dynamodb-local": "^0.2.39",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -37,6 +37,7 @@
     "lambda-tester": "^4.0.1",
     "mocha": "^7.1.2",
     "nyc": "^15.0.1",
+    "serverless-dynamodb-local": "^0.2.39",
     "serverless-offline": "^5.12.1",
     "serverless-plugin-typescript": "^1.1.9",
     "sinon": "^9.0.2",
