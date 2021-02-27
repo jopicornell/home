@@ -1,11 +1,11 @@
-
 import { Handler, Context } from 'aws-lambda';
 import dotenv from 'dotenv';
 import path from 'path';
 import 'reflect-metadata';
+import { Container } from 'inversify';
 import { TemperatureService } from './service/temperatures';
 import { TemperatureController } from './controller/temperatures';
-import { Container } from 'inversify';
+
 const dotenvPath = path.join(__dirname, '../', `config/.env.${process.env.NODE_ENV}`);
 dotenv.config({
   path: dotenvPath,
@@ -28,9 +28,6 @@ container.bind<TemperatureService>(TemperatureService).to(TemperatureService);
 
 const temperatureController = container.resolve<TemperatureController>(TemperatureController);
 
-export const create: Handler = (event: any, context: Context) => {
-  return temperatureController.create(event, context);
-};
+export const create: Handler = (event: any, context: Context) => temperatureController.create(event, context);
 
-export const find: Handler = (event: any, context: Context) =>
-  temperatureController.find(event, context);
+export const find: Handler = (event: any, context: Context) => temperatureController.find(event, context);
