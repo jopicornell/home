@@ -37,6 +37,7 @@ func main() {
 	fmt.Printf("sensor IDs: %v\n", sensors)
 	var request []map[string]interface{}
 	currentBaskingTemp := getBaskingTemp()
+	fmt.Printf("currentBaskingTemp: %f\n", currentBaskingTemp)
 	condition := getCurrentCondition()
 	defaultGpioValue := 0
 	if condition.IsHeaterOn(time.Now(), currentBaskingTemp) {
