@@ -29,7 +29,7 @@ func (c *SunsetSunriseCondition) IsLightOn(time time.Time) bool {
 	return true
 }
 
-func (c *SunsetSunriseCondition) Ideal(time time.Time) float64 {
+func (c *SunsetSunriseCondition) IdealTemperature(time time.Time) float64 {
 	sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time)
 	if sunrise.After(time) || sunset.Before(time) {
 		return c.TemperatureNight
