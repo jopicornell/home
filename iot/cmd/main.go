@@ -51,7 +51,6 @@ func main() {
 		for _, sensor := range sensors {
 			temperature, err := ds18b20.Temperature(sensor)
 			if err != nil {
-				log.Printf("Error getting temps: %s", err.Error())
 				continue
 			}
 			request = append(request, map[string]interface{}{
@@ -62,16 +61,16 @@ func main() {
 				currentStatus.BaskingTemp = temperature
 				condition := getCurrentCondition()
 				if !currentStatus.HeaterOn && condition.IsHeaterOn(time.Now(), temperature) {
-					fmt.Printf("Activating %s temperature reached %.2f less than %.2f", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
+					fmt.Printf("Activating %s temperature reached %.2f less than %.2f\n", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
 					err := gpioHeater.SetValue(1)
 					if err != nil {
-						log.Printf("Error getting temps: %+v", err)
+						log.Printf("Error activating heater: %+v", err)
 					}
 				} else if currentStatus.HeaterOn && !condition.IsHeaterOn(time.Now(), temperature) {
-					fmt.Printf("Deactivating %s temperature reached %.2f more than %.2f", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
+					fmt.Printf("Deactivating %s temperature reached %.2f more than %.2f\n", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
 					err := gpioHeater.SetValue(0)
 					if err != nil {
-						log.Printf("Error getting temps: %s", err.Error())
+						log.Printf("Error deactivating temps: %s", err.Error())
 					}
 				}
 				currentStatus.HeaterOn = condition.IsHeaterOn(time.Now(), currentStatus.BaskingTemp)
@@ -98,7 +97,7 @@ func getBaskingTemp() float64 {
 	for _, sensor := range sensors {
 		temperature, err := ds18b20.Temperature(sensor)
 		if err != nil {
-			log.Printf("Error getting temps: %s", err.Error())
+			log.Printf("Error getting basking temperature: %s", err.Error())
 			return 21
 		}
 		if sensorMap[sensor] == "nick-basking" {
