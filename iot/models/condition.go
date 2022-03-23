@@ -5,6 +5,7 @@ import "time"
 type Condition interface {
 	IsLightOn(time time.Time) bool
 	IsHeaterOn(time time.Time, temperature float32) bool
+	IdealTemperature(time time.Time) float32
 }
 
 type ConditionBase struct {
