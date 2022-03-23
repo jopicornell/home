@@ -7,7 +7,6 @@ import (
 )
 
 func CreateTemperature(ctx *fiber.Ctx) error {
-	// decode fiber request body to temperature
 	var temperature Temperature
 	err := ctx.BodyParser(&temperature)
 	if err != nil {
