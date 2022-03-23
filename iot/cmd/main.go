@@ -39,10 +39,10 @@ func main() {
 	currentBaskingTemp := getBaskingTemp()
 	condition := getCurrentCondition()
 	defaultGpioValue := 0
-	if condition.IsHeaterOn(time.Now(), float32(currentBaskingTemp)) {
+	if condition.IsHeaterOn(time.Now(), currentBaskingTemp) {
 		defaultGpioValue = 1
 	}
-	gpioHeater, err := gpiod.RequestLine("gpiochip0", 14, gpiod.AsOutput(defaultGpioValue))
+	gpioHeater, err := getHeaterLine(defaultGpioValue)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,14 +61,20 @@ func main() {
 			if sensorMap[sensor] == "nick-basking" {
 				currentStatus.BaskingTemp = temperature
 				condition := getCurrentCondition()
-				if !currentStatus.HeaterOn && condition.IsHeaterOn(time.Now(), float32(temperature)) {
+				if !currentStatus.HeaterOn && condition.IsHeaterOn(time.Now(), temperature) {
 					fmt.Printf("Activating %s temperature reached %.2f less than %.2f", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
-					gpioHeater.SetValue(1)
-				} else if currentStatus.HeaterOn && !condition.IsHeaterOn(time.Now(), float32(temperature)) {
+					err := gpioHeater.SetValue(1)
+					if err != nil {
+						log.Printf("Error getting temps: %s", err.Error())
+					}
+				} else if currentStatus.HeaterOn && !condition.IsHeaterOn(time.Now(), temperature) {
 					fmt.Printf("Deactivating %s temperature reached %.2f less than %.2f", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
-					gpioHeater.SetValue(0)
+					err := gpioHeater.SetValue(0)
+					if err != nil {
+						log.Printf("Error getting temps: %s", err.Error())
+					}
 				}
-				currentStatus.HeaterOn = condition.IsHeaterOn(time.Now(), float32(currentStatus.BaskingTemp))
+				currentStatus.HeaterOn = condition.IsHeaterOn(time.Now(), currentStatus.BaskingTemp)
 				currentStatus.LightOn = condition.IsLightOn(time.Now())
 			}
 			if sensorMap[sensor] == "nick-cold" {
@@ -111,6 +117,6 @@ func getCurrentCondition() models.Condition {
 	}
 }
 
-func getHeaterLine() (*gpiod.Line, error) {
-	return gpiod.RequestLine("gpiochip0", 14, gpiod.AsOutput(1))
+func getHeaterLine(defaultValue int) (*gpiod.Line, error) {
+	return gpiod.RequestLine("gpiochip0", 14, gpiod.AsOutput(defaultValue))
 }
