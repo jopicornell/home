@@ -22,8 +22,13 @@ func main() {
 	}
 	fmt.Printf("sensor IDs: %v\n", sensors)
 	var request []map[string]interface{}
-
-	gpioHeater, err := gpiod.RequestLine("gpiochip0", 14, gpiod.AsOutput(1))
+	currentBaskingTemp := getBaskingTemp()
+	condition := getCurrentCondition()
+	defaultGpioValue := 0
+	if condition.IsHeaterOn(time.Now(), float32(currentBaskingTemp)) {
+		defaultGpioValue = 1
+	}
+	gpioHeater, err := gpiod.RequestLine("gpiochip0", 14, gpiod.AsOutput(defaultGpioValue))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,7 +45,7 @@ func main() {
 				"temperature": temperature,
 				"type":        sensorMap[sensor],
 			})
-			if sensorMap[sensor] == "nick-busk" {
+			if sensorMap[sensor] == "nick-basking" {
 				condition := getCurrentCondition()
 				if condition.IsHeaterOn(time.Now(), float32(temperature)) {
 					fmt.Printf("Activating %s", sensorMap[sensor])
@@ -51,13 +56,31 @@ func main() {
 				}
 			}
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 	//	response, err := http.Post("https://umczz0pvpc.execute-api.eu-central-1.amazonaws.com/prod/temperatures", "application/json", bytes.NewBuffer(body))
 	//	if err != nil {
 	//		log.Fatal(err)
 	//	}
 	//	log.Printf("Created temperatures. Response: %+v", response)
+}
+
+func getBaskingTemp() float64 {
+	sensors, err := ds18b20.Sensors()
+	if err != nil {
+		panic(err)
+	}
+	for _, sensor := range sensors {
+		temperature, err := ds18b20.Temperature(sensor)
+		if err != nil {
+			log.Printf("Error getting temps: %s", err.Error())
+			return 21
+		}
+		if sensorMap[sensor] == "nick-basking" {
+			return temperature
+		}
+	}
+	return 21
 }
 
 func getCurrentCondition() models.Condition {
@@ -69,6 +92,6 @@ func getCurrentCondition() models.Condition {
 	}
 }
 
-func getSensorLine(sensor string) (*gpiod.Line, error) {
+func getHeaterLine() (*gpiod.Line, error) {
 	return gpiod.RequestLine("gpiochip0", 14, gpiod.AsOutput(1))
 }
