@@ -65,10 +65,10 @@ func main() {
 					fmt.Printf("Activating %s temperature reached %.2f less than %.2f", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
 					err := gpioHeater.SetValue(1)
 					if err != nil {
-						log.Printf("Error getting temps: %s", err.Error())
+						log.Printf("Error getting temps: %+v", err)
 					}
 				} else if currentStatus.HeaterOn && !condition.IsHeaterOn(time.Now(), temperature) {
-					fmt.Printf("Deactivating %s temperature reached %.2f less than %.2f", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
+					fmt.Printf("Deactivating %s temperature reached %.2f more than %.2f", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
 					err := gpioHeater.SetValue(0)
 					if err != nil {
 						log.Printf("Error getting temps: %s", err.Error())
