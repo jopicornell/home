@@ -186,12 +186,12 @@ func ShouldDeactivateHeater(temperature float64) bool {
 
 func ShouldActivateLight() bool {
 	condition := getCurrentCondition()
-	return !currentStatus.HeaterOn && condition.IsLightOn(time.Now())
+	return !currentStatus.LightOn && condition.IsLightOn(time.Now())
 }
 
 func ShouldDeactivateLight() bool {
 	condition := getCurrentCondition()
-	return currentStatus.HeaterOn && !condition.IsLightOn(time.Now())
+	return currentStatus.LightOn && !condition.IsLightOn(time.Now())
 }
 
 func getCurrentCondition() models.Condition {
