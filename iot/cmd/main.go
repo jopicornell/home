@@ -54,8 +54,10 @@ func main() {
 	Logger = log.New()
 	Logger.SetOutput(stdAndFile)
 	Logger.SetFormatter(&log.TextFormatter{
-		DisableColors: true,
-		FullTimestamp: true,
+		DisableColors:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+		FullTimestamp:   true,
+		ForceColors:     true,
 	})
 	ChangesLogger = log.New()
 	ChangesLogger.SetOutput(fileChanges)
