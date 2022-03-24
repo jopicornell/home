@@ -1,25 +1,32 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/jopicornell/thermonick/models"
 	"github.com/warthog618/gpiod"
 	"github.com/yryz/ds18b20"
 	"log"
+	"os"
 	"time"
 	//	"net/http"
 )
-
-var sensorMap = map[string]string{
-	"28-012032eb3734": "nick-basking",
-	"28-012032cd28ce": "nick-cold",
-}
 
 type Status struct {
 	HeaterOn    bool
 	LightOn     bool
 	BaskingTemp float64
 	ColdTemp    float64
+}
+
+var sensorMap = map[string]string{
+	"28-012032eb3734": "basking",
+	"28-012032cd28ce": "cold",
+}
+
+var sensorNameMap = map[string]string{
+	"basking": "28-012032eb3734",
+	"cold":    "28-012032cd28ce",
 }
 
 var currentStatus Status = Status{
@@ -29,58 +36,33 @@ var currentStatus Status = Status{
 	ColdTemp:    0,
 }
 
+var HeaterLine *gpiod.Line
+var HeaterLineNumber int
+
 func main() {
 	sensors, err := ds18b20.Sensors()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("sensor IDs: %v\n", sensors)
-	var request []map[string]interface{}
 	currentBaskingTemp := getBaskingTemp()
 	fmt.Printf("currentBaskingTemp: %f\n", currentBaskingTemp)
-	condition := getCurrentCondition()
-	defaultGpioValue := 0
-	if condition.IsHeaterOn(time.Now(), currentBaskingTemp) {
-		defaultGpioValue = 1
-	}
-	gpioHeater, err := getHeaterLine(defaultGpioValue)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	reader := bufio.NewReader(os.Stdin)
+	ReadCommandsRoutine(reader)
 	for {
-		for _, sensor := range sensors {
-			temperature, err := ds18b20.Temperature(sensor)
-			if err != nil {
-				continue
-			}
-			request = append(request, map[string]interface{}{
-				"temperature": temperature,
-				"type":        sensorMap[sensor],
-			})
-			if sensorMap[sensor] == "nick-basking" {
-				currentStatus.BaskingTemp = temperature
-				condition := getCurrentCondition()
-				if !currentStatus.HeaterOn && condition.IsHeaterOn(time.Now(), temperature) {
-					fmt.Printf("Activating %s temperature reached %.2f less than %.2f\n", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
-					err := gpioHeater.SetValue(1)
-					if err != nil {
-						log.Printf("Error activating heater: %+v", err)
-					}
-				} else if currentStatus.HeaterOn && !condition.IsHeaterOn(time.Now(), temperature) {
-					fmt.Printf("Deactivating %s temperature reached %.2f more than %.2f\n", sensorMap[sensor], temperature, condition.IdealTemperature(time.Now()))
-					err := gpioHeater.SetValue(0)
-					if err != nil {
-						log.Printf("Error deactivating temps: %s", err.Error())
-					}
-				}
-				currentStatus.HeaterOn = condition.IsHeaterOn(time.Now(), currentStatus.BaskingTemp)
-				currentStatus.LightOn = condition.IsLightOn(time.Now())
-			}
-			if sensorMap[sensor] == "nick-cold" {
-				currentStatus.ColdTemp = temperature
-			}
+		baskingTemperature := getBaskingTemp()
+		currentStatus.BaskingTemp = baskingTemperature
+		if ShouldActivateHeater(baskingTemperature) {
+			ActivateHeater(baskingTemperature)
+		} else if ShouldDeactivateHeater(baskingTemperature) {
+			DeactivateHeater(baskingTemperature)
 		}
+		if ShouldActivateLight() {
+			currentStatus.LightOn = true
+		} else if ShouldDeactivateLight() {
+			currentStatus.LightOn = false
+		}
+		currentStatus.ColdTemp = getColdTemp()
 		time.Sleep(5 * time.Second)
 	}
 	//	response, err := http.Post("https://umczz0pvpc.execute-api.eu-central-1.amazonaws.com/prod/temperatures", "application/json", bytes.NewBuffer(body))
@@ -90,22 +72,71 @@ func main() {
 	//	log.Printf("Created temperatures. Response: %+v", response)
 }
 
-func getBaskingTemp() float64 {
-	sensors, err := ds18b20.Sensors()
+func ReadCommandsRoutine(reader *bufio.Reader) {
+	go func() {
+		for {
+			cmd, _ := reader.ReadString('\n')
+			if cmd == "status" {
+				fmt.Printf("currentStatus heater %v %v %f %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
+			}
+		}
+
+	}()
+}
+
+func DeactivateHeater(baskingTemperature float64) {
+	fmt.Printf("Deactivating heater temperature reached %.2f more than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	err := getHeaterLine().SetValue(0)
 	if err != nil {
-		panic(err)
+		log.Printf("Error deactivating temps: %s", err.Error())
 	}
-	for _, sensor := range sensors {
-		temperature, err := ds18b20.Temperature(sensor)
-		if err != nil {
-			log.Printf("Error getting basking temperature: %s", err.Error())
-			return 21
-		}
-		if sensorMap[sensor] == "nick-basking" {
-			return temperature
-		}
+	currentStatus.HeaterOn = false
+}
+
+func ActivateHeater(baskingTemperature float64) {
+	fmt.Printf("Activating heater temperature reached %.2f less than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	err := getHeaterLine().SetValue(1)
+	if err != nil {
+		log.Printf("Error activating heater: %+v", err)
 	}
-	return 21
+	currentStatus.HeaterOn = true
+}
+
+func getBaskingTemp() float64 {
+	return getTemperature(sensorNameMap["basking"])
+}
+
+func getColdTemp() float64 {
+	return getTemperature(sensorNameMap["cold"])
+}
+
+func getTemperature(sensorName string) float64 {
+	temperature, err := ds18b20.Temperature(sensorName)
+	if err != nil {
+		log.Printf("Error getting basking temperature: %s", err.Error())
+		return 21
+	}
+	return temperature
+}
+
+func ShouldActivateHeater(temperature float64) bool {
+	condition := getCurrentCondition()
+	return !currentStatus.HeaterOn && condition.IsHeaterOn(time.Now(), temperature)
+}
+
+func ShouldDeactivateHeater(temperature float64) bool {
+	condition := getCurrentCondition()
+	return currentStatus.HeaterOn && !condition.IsHeaterOn(time.Now(), temperature)
+}
+
+func ShouldActivateLight() bool {
+	condition := getCurrentCondition()
+	return !currentStatus.HeaterOn && condition.IsLightOn(time.Now())
+}
+
+func ShouldDeactivateLight() bool {
+	condition := getCurrentCondition()
+	return currentStatus.HeaterOn && !condition.IsLightOn(time.Now())
 }
 
 func getCurrentCondition() models.Condition {
@@ -117,6 +148,22 @@ func getCurrentCondition() models.Condition {
 	}
 }
 
-func getHeaterLine(defaultValue int) (*gpiod.Line, error) {
-	return gpiod.RequestLine("gpiochip0", 14, gpiod.AsOutput(defaultValue))
+func getDefaultGpioValue() int {
+	condition := getCurrentCondition()
+	if condition.IsHeaterOn(time.Now(), getBaskingTemp()) {
+		return 1
+	}
+	return 0
+}
+
+func getHeaterLine() *gpiod.Line {
+	if HeaterLine == nil {
+		line, err := gpiod.RequestLine("gpiochip0", HeaterLineNumber, gpiod.AsOutput(getDefaultGpioValue()))
+		if err != nil {
+			log.Fatal(err)
+		}
+		HeaterLine = line
+		return line
+	}
+	return HeaterLine
 }
