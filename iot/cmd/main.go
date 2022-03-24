@@ -76,11 +76,10 @@ func ReadCommandsRoutine() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
 			cmd, err := reader.ReadString('\n')
-			log.Printf("cmd: %s", cmd)
 			if err != nil {
 				log.Fatal(err)
 			}
-			if cmd == "status" {
+			if cmd == "status\n" {
 				fmt.Printf("currentStatus heater %v %v %f %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
 			}
 		}
