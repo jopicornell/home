@@ -52,11 +52,13 @@ func main() {
 
 	stdAndFile := io.MultiWriter(file, os.Stdout)
 
+	stdAndFileChanges := io.MultiWriter(fileChanges, os.Stdout)
+
 	Logger = log.New()
 	Logger.SetOutput(stdAndFile)
 	Logger.SetFormatter(&formatter.Formatter{})
 	ChangesLogger = log.New()
-	ChangesLogger.SetOutput(fileChanges)
+	ChangesLogger.SetOutput(stdAndFileChanges)
 
 	sensors, err := ds18b20.Sensors()
 	if err != nil {
@@ -84,9 +86,9 @@ func main() {
 			DeactivateHeater(baskingTemperature)
 		}
 		if ShouldActivateLight() {
-			ActivateLight(baskingTemperature)
+			ActivateLight()
 		} else if ShouldDeactivateLight() {
-			DeactivateLight(baskingTemperature)
+			DeactivateLight()
 		}
 
 		currentStatus.ColdTemp = coldTemperature
@@ -144,20 +146,20 @@ func ActivateHeater(baskingTemperature float64) {
 	currentStatus.HeaterOn = true
 }
 
-func DeactivateLight(baskingTemperature float64) {
-	ChangesLogger.Printf("Deactivating heater temperature reached %.2f more than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+func DeactivateLight() {
+	ChangesLogger.Printf("Deactivating light due to sunset")
 	err := getLightLine().SetValue(0)
 	if err != nil {
-		Logger.Errorf("Error deactivating heater: %s", err.Error())
+		Logger.Errorf("Error deactivating light: %s", err.Error())
 	}
 	currentStatus.LightOn = false
 }
 
-func ActivateLight(baskingTemperature float64) {
-	ChangesLogger.Printf("Activating heater temperature reached %.2f less than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+func ActivateLight() {
+	ChangesLogger.Printf("Activating light due to sunrise")
 	err := getLightLine().SetValue(1)
 	if err != nil {
-		Logger.Errorf("Error activating heater: %+v", err)
+		Logger.Errorf("Error activating light: %+v", err)
 	}
 	currentStatus.LightOn = true
 }
