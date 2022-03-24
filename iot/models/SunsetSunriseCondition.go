@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/jopicornell/thermonick/utils"
+	"log"
 	"time"
 )
 
@@ -15,18 +16,16 @@ type SunsetSunriseCondition struct {
 
 func (c *SunsetSunriseCondition) IsHeaterOn(time time.Time, temperature float64) bool {
 	sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time)
-	if sunrise.After(time) || sunset.Before(time) {
-		return c.TemperatureNight > temperature
+	log.Printf("Sunrise: %s Sunset: %s", sunrise, sunset)
+	if time.After(sunrise) && time.Before(sunset) {
+		return c.TemperatureDay > temperature
 	}
-	return c.TemperatureDay > temperature
+	return c.TemperatureNight > temperature
 }
 
 func (c *SunsetSunriseCondition) IsLightOn(time time.Time) bool {
 	sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time)
-	if sunrise.After(time) || sunset.Before(time) {
-		return false
-	}
-	return true
+	return time.After(sunrise) && time.Before(sunset)
 }
 
 func (c *SunsetSunriseCondition) IdealTemperature(time time.Time) float64 {
