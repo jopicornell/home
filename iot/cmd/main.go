@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/gpiod"
 	"github.com/yryz/ds18b20"
+	"io"
 	"os"
 	"time"
 	//	"net/http"
@@ -34,8 +35,7 @@ var HeaterLine *gpiod.Line
 var HeaterLineNumber int = 14
 var LightLine *gpiod.Line
 var LightLineNumber int = 15
-var ErrorLogger *log.Logger
-var InfoLogger *log.Logger
+var Logger *log.Logger
 var ChangesLogger *log.Logger
 
 func main() {
@@ -49,25 +49,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fileErr, err := os.OpenFile("errors.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
+	stdAndFile := io.MultiWriter(file, os.Stdout)
 
-	InfoLogger = log.New()
-	InfoLogger.SetOutput(file)
+	Logger = log.New()
+	Logger.SetOutput(stdAndFile)
 	ChangesLogger = log.New()
 	ChangesLogger.SetOutput(fileChanges)
-	ErrorLogger = log.New()
-	ErrorLogger.SetOutput(fileErr)
 
 	sensors, err := ds18b20.Sensors()
 	if err != nil {
 		panic(err)
 	}
-	InfoLogger.Printf("sensor IDs: %v\n", sensors)
+	Logger.Printf("sensor IDs: %v\n", sensors)
 	currentBaskingTemp := getBaskingTemp()
-	InfoLogger.Printf("currentBaskingTemp: %f\n", currentBaskingTemp)
+	Logger.Printf("currentBaskingTemp: %f\n", currentBaskingTemp)
 	ReadCommandsRoutine()
 	for {
 		baskingTemperature := getBaskingTemp()
@@ -98,10 +93,10 @@ func ReadCommandsRoutine() {
 		for {
 			cmd, err := reader.ReadString('\n')
 			if err != nil {
-				ErrorLogger.Fatal(err)
+				Logger.Fatal(err)
 			}
 			if cmd == "status\n" {
-				InfoLogger.Printf("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
+				Logger.Infof("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
 			}
 		}
 
@@ -109,19 +104,19 @@ func ReadCommandsRoutine() {
 }
 
 func DeactivateHeater(baskingTemperature float64) {
-	ChangesLogger.Printf("Deactivating heater temperature reached %.2f more than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	ChangesLogger.Info("Deactivating heater temperature reached %.2f more than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getHeaterLine().SetValue(0)
 	if err != nil {
-		ErrorLogger.Printf("Error deactivating heater: %s", err.Error())
+		Logger.Errorf("Error deactivating heater: %s", err.Error())
 	}
 	currentStatus.HeaterOn = false
 }
 
 func ActivateHeater(baskingTemperature float64) {
-	ChangesLogger.Printf("Activating heater temperature reached %.2f less than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	ChangesLogger.Info("Activating heater temperature reached %.2f less than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getHeaterLine().SetValue(1)
 	if err != nil {
-		ErrorLogger.Printf("Error activating heater: %+v", err)
+		Logger.Errorf("Error activating heater: %+v", err)
 	}
 	currentStatus.HeaterOn = true
 }
@@ -130,7 +125,7 @@ func DeactivateLight(baskingTemperature float64) {
 	ChangesLogger.Printf("Deactivating heater temperature reached %.2f more than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getLightLine().SetValue(0)
 	if err != nil {
-		ErrorLogger.Printf("Error deactivating heater: %s", err.Error())
+		Logger.Errorf("Error deactivating heater: %s", err.Error())
 	}
 	currentStatus.LightOn = false
 }
@@ -139,7 +134,7 @@ func ActivateLight(baskingTemperature float64) {
 	ChangesLogger.Printf("Activating heater temperature reached %.2f less than %.2f\n", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getLightLine().SetValue(1)
 	if err != nil {
-		ErrorLogger.Printf("Error activating heater: %+v", err)
+		Logger.Errorf("Error activating heater: %+v", err)
 	}
 	currentStatus.LightOn = true
 }
@@ -155,7 +150,7 @@ func getColdTemp() float64 {
 func getTemperature(sensorName string) float64 {
 	temperature, err := ds18b20.Temperature(sensorName)
 	if err != nil {
-		ErrorLogger.Printf("Error getting basking temperature: %s", err.Error())
+		Logger.Errorf("Error getting basking temperature: %s", err.Error())
 		return 21
 	}
 	return temperature
@@ -202,7 +197,7 @@ func getHeaterLine() *gpiod.Line {
 	if HeaterLine == nil {
 		line, err := gpiod.RequestLine("gpiochip0", HeaterLineNumber, gpiod.AsOutput(getDefaultGpioValue()))
 		if err != nil {
-			ErrorLogger.Fatal(err)
+			Logger.Fatal(err)
 		}
 		HeaterLine = line
 		return line
@@ -214,7 +209,7 @@ func getLightLine() *gpiod.Line {
 	if LightLine == nil {
 		line, err := gpiod.RequestLine("gpiochip0", LightLineNumber, gpiod.AsOutput(getDefaultGpioValue()))
 		if err != nil {
-			ErrorLogger.Fatal(err)
+			Logger.Fatal(err)
 		}
 		LightLine = line
 		return line
