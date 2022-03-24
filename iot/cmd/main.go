@@ -65,8 +65,18 @@ func main() {
 	Logger.Infof("sensor IDs: %v", sensors)
 	ReadCommandsRoutine()
 	for {
-		baskingTemperature := getBaskingTemp()
-		coldTemperature := getColdTemp()
+		baskingTemperature, err := getBaskingTemp()
+		if err != nil {
+			Logger.Errorf("Error getting basking temperature: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		coldTemperature, err := getColdTemp()
+		if err != nil {
+			Logger.Errorf("Error getting basking temperature: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
 		ChangeStatusTemperatures(baskingTemperature, coldTemperature)
 		if ShouldActivateHeater(baskingTemperature) {
 			ActivateHeater(baskingTemperature)
@@ -80,7 +90,7 @@ func main() {
 		}
 
 		currentStatus.ColdTemp = coldTemperature
-		time.Sleep(5 * time.Second)
+		time.Sleep(time.Minute)
 	}
 	//	response, err := http.Post("https://umczz0pvpc.execute-api.eu-central-1.amazonaws.com/prod/temperatures", "application/json", bytes.NewBuffer(body))
 	//	if err != nil {
@@ -152,21 +162,16 @@ func ActivateLight(baskingTemperature float64) {
 	currentStatus.LightOn = true
 }
 
-func getBaskingTemp() float64 {
+func getBaskingTemp() (float64, error) {
 	return getTemperature(sensorNameMap["basking"])
 }
 
-func getColdTemp() float64 {
+func getColdTemp() (float64, error) {
 	return getTemperature(sensorNameMap["cold"])
 }
 
-func getTemperature(sensorName string) float64 {
-	temperature, err := ds18b20.Temperature(sensorName)
-	if err != nil {
-		Logger.Errorf("Error getting basking temperature: %s", err.Error())
-		return 21
-	}
-	return temperature
+func getTemperature(sensorName string) (float64, error) {
+	return ds18b20.Temperature(sensorName)
 }
 
 func ShouldActivateHeater(temperature float64) bool {
@@ -200,7 +205,12 @@ func getCurrentCondition() models.Condition {
 
 func getDefaultGpioValue() int {
 	condition := getCurrentCondition()
-	if condition.IsHeaterOn(time.Now(), getBaskingTemp()) {
+	baskingTemperature, err := getBaskingTemp()
+	if err != nil {
+		Logger.Errorf("Error getting basking temperature: %s", err.Error())
+		return 0
+	}
+	if condition.IsHeaterOn(time.Now(), baskingTemperature) {
 		return 1
 	}
 	return 0
