@@ -93,11 +93,11 @@ func main() {
 
 func ChangeStatusTemperatures(baskingTemperature float64, coldTemperature float64) {
 	if baskingTemperature != currentStatus.BaskingTemp {
-		Logger.Info("Changed baskingTemperature: %f\n", baskingTemperature)
+		Logger.Info("Changed baskingTemperature: %.2f \n", baskingTemperature)
 		currentStatus.BaskingTemp = baskingTemperature
 	}
 	if coldTemperature != currentStatus.ColdTemp {
-		Logger.Info("Changed cold temperature: %f\n", coldTemperature)
+		Logger.Info("Changed cold temperature: %.2f \n", coldTemperature)
 		currentStatus.ColdTemp = coldTemperature
 	}
 }
