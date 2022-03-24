@@ -75,7 +75,7 @@ func ReadCommandsRoutine() {
 				log.Fatal(err)
 			}
 			if cmd == "status\n" {
-				fmt.Printf("Current status \n Heater: %v \n Light: %v \n BaskingTemp: \n %f ColdTemp: %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
+				fmt.Printf("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
 			}
 		}
 
