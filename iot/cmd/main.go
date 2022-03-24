@@ -59,6 +59,7 @@ func main() {
 	Logger.SetFormatter(&formatter.Formatter{})
 	ChangesLogger = log.New()
 	ChangesLogger.SetOutput(stdAndFileChanges)
+	ChangesLogger.SetFormatter(&formatter.Formatter{})
 
 	sensors, err := ds18b20.Sensors()
 	if err != nil {
