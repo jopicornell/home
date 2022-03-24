@@ -47,8 +47,7 @@ func main() {
 	fmt.Printf("sensor IDs: %v\n", sensors)
 	currentBaskingTemp := getBaskingTemp()
 	fmt.Printf("currentBaskingTemp: %f\n", currentBaskingTemp)
-	reader := bufio.NewReader(os.Stdin)
-	ReadCommandsRoutine(reader)
+	ReadCommandsRoutine()
 	for {
 		baskingTemperature := getBaskingTemp()
 		currentStatus.BaskingTemp = baskingTemperature
@@ -72,10 +71,15 @@ func main() {
 	//	log.Printf("Created temperatures. Response: %+v", response)
 }
 
-func ReadCommandsRoutine(reader *bufio.Reader) {
+func ReadCommandsRoutine() {
 	go func() {
+		reader := bufio.NewReader(os.Stdin)
 		for {
-			cmd, _ := reader.ReadString('\n')
+			cmd, err := reader.ReadString('\n')
+			log.Printf("cmd: %s", cmd)
+			if err != nil {
+				log.Fatal(err)
+			}
 			if cmd == "status" {
 				fmt.Printf("currentStatus heater %v %v %f %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
 			}
