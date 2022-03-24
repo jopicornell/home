@@ -119,7 +119,7 @@ func ReadCommandsRoutine() {
 }
 
 func DeactivateHeater(baskingTemperature float64) {
-	ChangesLogger.Info("Deactivating heater temperature reached %.2f more than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	ChangesLogger.Infof("Deactivating heater temperature reached %.2f more than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getHeaterLine().SetValue(0)
 	if err != nil {
 		Logger.Errorf("Error deactivating heater: %s", err.Error())
@@ -128,7 +128,7 @@ func DeactivateHeater(baskingTemperature float64) {
 }
 
 func ActivateHeater(baskingTemperature float64) {
-	ChangesLogger.Info("Activating heater temperature reached %.2f less than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	ChangesLogger.Infof("Activating heater temperature reached %.2f less than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getHeaterLine().SetValue(1)
 	if err != nil {
 		Logger.Errorf("Error activating heater: %+v", err)
