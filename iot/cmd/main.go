@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"github.com/jopicornell/thermonick/models"
+	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/gpiod"
 	"github.com/yryz/ds18b20"
-	"log"
 	"os"
 	"time"
 	//	"net/http"
@@ -54,9 +54,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	InfoLogger = log.New(file, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	ChangesLogger = log.New(fileChanges, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	ErrorLogger = log.New(fileErr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	InfoLogger = log.New()
+	InfoLogger.SetOutput(file)
+	ChangesLogger = log.New()
+	ChangesLogger.SetOutput(fileChanges)
+	ErrorLogger = log.New()
+	ErrorLogger.SetOutput(fileErr)
 
 	sensors, err := ds18b20.Sensors()
 	if err != nil {
