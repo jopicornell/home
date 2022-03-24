@@ -53,6 +53,10 @@ func main() {
 
 	Logger = log.New()
 	Logger.SetOutput(stdAndFile)
+	Logger.SetFormatter(&log.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+	})
 	ChangesLogger = log.New()
 	ChangesLogger.SetOutput(fileChanges)
 
@@ -66,7 +70,8 @@ func main() {
 	ReadCommandsRoutine()
 	for {
 		baskingTemperature := getBaskingTemp()
-		currentStatus.BaskingTemp = baskingTemperature
+		coldTemperature := getColdTemp()
+		ChangeStatusTemperatures(baskingTemperature, coldTemperature)
 		if ShouldActivateHeater(baskingTemperature) {
 			ActivateHeater(baskingTemperature)
 		} else if ShouldDeactivateHeater(baskingTemperature) {
@@ -77,7 +82,8 @@ func main() {
 		} else if ShouldDeactivateLight() {
 			DeactivateLight(baskingTemperature)
 		}
-		currentStatus.ColdTemp = getColdTemp()
+
+		currentStatus.ColdTemp = coldTemperature
 		time.Sleep(5 * time.Second)
 	}
 	//	response, err := http.Post("https://umczz0pvpc.execute-api.eu-central-1.amazonaws.com/prod/temperatures", "application/json", bytes.NewBuffer(body))
@@ -85,6 +91,17 @@ func main() {
 	//		log.Fatal(err)
 	//	}
 	//	log.Printf("Created temperatures. Response: %+v", response)
+}
+
+func ChangeStatusTemperatures(baskingTemperature float64, coldTemperature float64) {
+	if baskingTemperature != currentStatus.BaskingTemp {
+		Logger.Info("Changed baskingTemperature: %f\n", baskingTemperature)
+		currentStatus.BaskingTemp = baskingTemperature
+	}
+	if coldTemperature != currentStatus.ColdTemp {
+		Logger.Info("Changed cold temperature: %f\n", coldTemperature)
+		currentStatus.ColdTemp = coldTemperature
+	}
 }
 
 func ReadCommandsRoutine() {
