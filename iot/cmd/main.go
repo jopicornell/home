@@ -62,9 +62,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	Logger.Printf("sensor IDs: %v", sensors)
-	currentBaskingTemp := getBaskingTemp()
-	Logger.Printf("currentBaskingTemp: %f", currentBaskingTemp)
+	Logger.Infof("sensor IDs: %v", sensors)
 	ReadCommandsRoutine()
 	for {
 		baskingTemperature := getBaskingTemp()
@@ -93,11 +91,11 @@ func main() {
 
 func ChangeStatusTemperatures(baskingTemperature float64, coldTemperature float64) {
 	if baskingTemperature != currentStatus.BaskingTemp {
-		Logger.Info("Changed baskingTemperature: %.2f", baskingTemperature)
+		Logger.Infof("Changed baskingTemperature: %.2f", baskingTemperature)
 		currentStatus.BaskingTemp = baskingTemperature
 	}
 	if coldTemperature != currentStatus.ColdTemp {
-		Logger.Info("Changed cold temperature: %.2f", coldTemperature)
+		Logger.Infof("Changed cold temperature: %.2f", coldTemperature)
 		currentStatus.ColdTemp = coldTemperature
 	}
 }
