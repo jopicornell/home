@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	formatter "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/jopicornell/thermonick/models"
 	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/gpiod"
@@ -53,12 +54,7 @@ func main() {
 
 	Logger = log.New()
 	Logger.SetOutput(stdAndFile)
-	Logger.SetFormatter(&log.TextFormatter{
-		DisableColors:   true,
-		TimestampFormat: "2006-01-02 15:04:05",
-		FullTimestamp:   true,
-		ForceColors:     true,
-	})
+	Logger.SetFormatter(&formatter.Formatter{})
 	ChangesLogger = log.New()
 	ChangesLogger.SetOutput(fileChanges)
 
