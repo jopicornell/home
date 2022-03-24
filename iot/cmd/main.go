@@ -19,11 +19,6 @@ type Status struct {
 	ColdTemp    float64
 }
 
-var sensorMap = map[string]string{
-	"28-012032eb3734": "basking",
-	"28-012032cd28ce": "cold",
-}
-
 var sensorNameMap = map[string]string{
 	"basking": "28-012032eb3734",
 	"cold":    "28-012032cd28ce",
@@ -80,7 +75,7 @@ func ReadCommandsRoutine() {
 				log.Fatal(err)
 			}
 			if cmd == "status\n" {
-				fmt.Printf("currentStatus heater %v %v %f %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
+				fmt.Printf("Current status \n Heater: %v \n Light: %v \n BaskingTemp: \n %f ColdTemp: %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
 			}
 		}
 
