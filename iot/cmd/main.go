@@ -2,16 +2,13 @@ package main
 
 import (
 	"bufio"
-	formatter "github.com/antonfisher/nested-logrus-formatter"
+	"github.com/jopicornell/thermonick/log"
 	"github.com/jopicornell/thermonick/models"
 	"github.com/jopicornell/thermonick/utils"
-	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/gpiod"
 	"github.com/yryz/ds18b20"
-	"io"
 	"os"
 	"time"
-	//	"net/http"
 )
 
 type Status struct {
@@ -37,47 +34,25 @@ var HeaterLine *gpiod.Line
 var HeaterLineNumber int = 14
 var LightLine *gpiod.Line
 var LightLineNumber int = 15
-var Logger *log.Logger
-var ChangesLogger *log.Logger
 
 func main() {
-	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fileChanges, err := os.OpenFile("changes.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	stdAndFile := io.MultiWriter(file, os.Stdout)
-
-	stdAndFileChanges := io.MultiWriter(fileChanges, os.Stdout)
-
-	Logger = log.New()
-	Logger.SetOutput(stdAndFile)
-	Logger.SetFormatter(&formatter.Formatter{})
-	ChangesLogger = log.New()
-	ChangesLogger.SetOutput(stdAndFileChanges)
-	ChangesLogger.SetFormatter(&formatter.Formatter{})
-
+	log.CreateLoggers()
 	sensors, err := ds18b20.Sensors()
 	if err != nil {
 		panic(err)
 	}
-	Logger.Infof("sensor IDs: %v", sensors)
+	log.Logger.Infof("sensor IDs: %v", sensors)
 	ReadCommandsRoutine()
 	for {
 		baskingTemperature, err := getBaskingTemp()
 		if err != nil {
-			Logger.Errorf("Error getting basking temperature: %v", err)
+			log.Logger.Errorf("Error getting basking temperature: %v", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
 		coldTemperature, err := getColdTemp()
 		if err != nil {
-			Logger.Errorf("Error getting basking temperature: %v", err)
+			log.Logger.Errorf("Error getting basking temperature: %v", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -105,11 +80,11 @@ func main() {
 
 func ChangeStatusTemperatures(baskingTemperature float64, coldTemperature float64) {
 	if baskingTemperature != currentStatus.BaskingTemp {
-		Logger.Infof("Changed baskingTemperature: %.2f", baskingTemperature)
+		log.Logger.Infof("Changed baskingTemperature: %.2f", baskingTemperature)
 		currentStatus.BaskingTemp = baskingTemperature
 	}
 	if coldTemperature != currentStatus.ColdTemp {
-		Logger.Infof("Changed cold temperature: %.2f", coldTemperature)
+		log.Logger.Infof("Changed cold temperature: %.2f", coldTemperature)
 		currentStatus.ColdTemp = coldTemperature
 	}
 }
@@ -120,11 +95,11 @@ func ReadCommandsRoutine() {
 		for {
 			cmd, err := reader.ReadString('\n')
 			if err != nil {
-				Logger.Fatal(err)
+				log.Logger.Fatal(err)
 			}
 			sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time.Now())
 			if cmd == "status\n" {
-				Logger.Infof("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset)
+				log.Logger.Infof("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset)
 			}
 		}
 
@@ -132,37 +107,37 @@ func ReadCommandsRoutine() {
 }
 
 func DeactivateHeater(baskingTemperature float64) {
-	ChangesLogger.Infof("Deactivating heater temperature reached %.2f more than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	log.Logger.Infof("Deactivating heater temperature reached %.2f more than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getHeaterLine().SetValue(0)
 	if err != nil {
-		Logger.Errorf("Error deactivating heater: %s", err.Error())
+		log.Logger.Errorf("Error deactivating heater: %s", err.Error())
 	}
 	currentStatus.HeaterOn = false
 }
 
 func ActivateHeater(baskingTemperature float64) {
-	ChangesLogger.Infof("Activating heater temperature reached %.2f less than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
+	log.Logger.Infof("Activating heater temperature reached %.2f less than %.2f", baskingTemperature, getCurrentCondition().IdealTemperature(time.Now()))
 	err := getHeaterLine().SetValue(1)
 	if err != nil {
-		Logger.Errorf("Error activating heater: %+v", err)
+		log.Logger.Errorf("Error activating heater: %+v", err)
 	}
 	currentStatus.HeaterOn = true
 }
 
 func DeactivateLight() {
-	ChangesLogger.Printf("Deactivating light due to sunset")
+	log.Logger.Printf("Deactivating light due to sunset")
 	err := getLightLine().SetValue(0)
 	if err != nil {
-		Logger.Errorf("Error deactivating light: %s", err.Error())
+		log.Logger.Errorf("Error deactivating light: %s", err.Error())
 	}
 	currentStatus.LightOn = false
 }
 
 func ActivateLight() {
-	ChangesLogger.Printf("Activating light due to sunrise")
+	log.ChangesLogger.Printf("Activating light due to sunrise")
 	err := getLightLine().SetValue(1)
 	if err != nil {
-		Logger.Errorf("Error activating light: %+v", err)
+		log.Logger.Errorf("Error activating light: %+v", err)
 	}
 	currentStatus.LightOn = true
 }
@@ -212,7 +187,7 @@ func getDefaultGpioValue() int {
 	condition := getCurrentCondition()
 	baskingTemperature, err := getBaskingTemp()
 	if err != nil {
-		Logger.Errorf("Error getting basking temperature: %s", err.Error())
+		log.Logger.Errorf("Error getting basking temperature: %s", err.Error())
 		return 0
 	}
 	if condition.IsHeaterOn(time.Now(), baskingTemperature) {
@@ -225,7 +200,7 @@ func getHeaterLine() *gpiod.Line {
 	if HeaterLine == nil {
 		line, err := gpiod.RequestLine("gpiochip0", HeaterLineNumber, gpiod.AsOutput(getDefaultGpioValue()))
 		if err != nil {
-			Logger.Fatal(err)
+			log.Logger.Fatal(err)
 		}
 		HeaterLine = line
 		return line
@@ -237,7 +212,7 @@ func getLightLine() *gpiod.Line {
 	if LightLine == nil {
 		line, err := gpiod.RequestLine("gpiochip0", LightLineNumber, gpiod.AsOutput(getDefaultGpioValue()))
 		if err != nil {
-			Logger.Fatal(err)
+			log.Logger.Fatal(err)
 		}
 		LightLine = line
 		return line

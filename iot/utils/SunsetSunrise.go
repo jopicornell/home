@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jopicornell/thermonick/log"
 	"github.com/kelvins/sunrisesunset"
 	"time"
 )
@@ -12,6 +13,7 @@ func SunsetSunrise(latitude float64, longitude float64, date time.Time) (sunrise
 	_, offset := date.Zone()
 	sunrise, sunset, err := sunrisesunset.GetSunriseSunset(latitude, longitude, float64(offset), date)
 	if err != nil {
+		log.Logger.Error(err)
 		sunrise = backupSunrise
 		sunset = backupSunset
 	}
