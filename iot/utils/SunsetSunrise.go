@@ -8,6 +8,7 @@ import (
 
 var backupSunset = time.Date(2009, time.November, 10, 19, 0, 0, 0, time.UTC)
 var backupSunrise = time.Date(2009, time.November, 10, 8, 30, 0, 0, time.UTC)
+var MidTime = time.Date(2009, time.November, 10, 13, 0, 0, 0, time.UTC)
 
 func SunsetSunrise(latitude float64, longitude float64, date time.Time) (sunrise time.Time, sunset time.Time) {
 	_, offset := date.Zone()
@@ -18,6 +19,34 @@ func SunsetSunrise(latitude float64, longitude float64, date time.Time) (sunrise
 		sunset = backupSunset
 	}
 	return MergeDateTime(date, sunrise), MergeDateTime(date, sunset)
+}
+
+func AdjustedSunriseSunset(latitude float64, longitude float64, date time.Time, maxHours float64, minHours float64) (sunrise time.Time, sunset time.Time) {
+	sunrise, sunset = SunsetSunrise(latitude, longitude, date)
+	maxDuration := time.Duration(maxHours * float64(time.Hour.Nanoseconds()))
+	minDuration := time.Duration(minHours * float64(time.Hour.Nanoseconds()))
+	dayDuration := MinMaxDuration(GetDayDuration(sunrise, sunset), minDuration, maxDuration)
+	halfDayDuration := dayDuration / 2
+	sunrise = MidTime.Add(-halfDayDuration)
+	sunset = MidTime.Add(halfDayDuration)
+	return sunrise, sunset
+}
+
+func GetDayDuration(date1, date2 time.Time) time.Duration {
+	if date1.After(date2) {
+		return date1.Sub(date2)
+	}
+	return date2.Sub(date1)
+}
+
+func MinMaxDuration(duration time.Duration, minDuration time.Duration, maxDuration time.Duration) time.Duration {
+	if duration.Seconds() > maxDuration.Seconds() {
+		return maxDuration
+	}
+	if duration.Seconds() < minDuration.Seconds() {
+		return minDuration
+	}
+	return duration
 }
 
 func MergeDateTime(date time.Time, onlyTime time.Time) time.Time {

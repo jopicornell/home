@@ -14,7 +14,7 @@ type SunsetSunriseCondition struct {
 }
 
 func (c *SunsetSunriseCondition) IsHeaterOn(time time.Time, temperature float64) bool {
-	sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time)
+	sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time, c.MinimumHours, c.MaximumHours)
 	if time.After(sunrise) && time.Before(sunset) {
 		return c.TemperatureDay > temperature
 	}
@@ -22,12 +22,12 @@ func (c *SunsetSunriseCondition) IsHeaterOn(time time.Time, temperature float64)
 }
 
 func (c *SunsetSunriseCondition) IsLightOn(time time.Time) bool {
-	sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time)
+	sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time, c.MinimumHours, c.MaximumHours)
 	return time.After(sunrise) && time.Before(sunset)
 }
 
 func (c *SunsetSunriseCondition) IdealTemperature(time time.Time) float64 {
-	sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time)
+	sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time, c.MinimumHours, c.MaximumHours)
 	if time.After(sunrise) && time.Before(sunset) {
 		return c.TemperatureDay
 	}
