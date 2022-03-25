@@ -33,3 +33,11 @@ func (c *SunsetSunriseCondition) IdealTemperature(time time.Time) float64 {
 	}
 	return c.TemperatureNight
 }
+
+func (c *SunsetSunriseCondition) GetMaxTemperature() float64 {
+	return c.MaximumHours
+}
+
+func (c *SunsetSunriseCondition) GetMinTemperature() float64 {
+	return c.MinimumHours
+}

@@ -97,7 +97,7 @@ func ReadCommandsRoutine() {
 			if err != nil {
 				log.Logger.Fatal(err)
 			}
-			sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time.Now())
+			sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time.Now(), getCurrentCondition().GetMinHours(), getCurrentCondition().GetMaxHours())
 			if cmd == "status\n" {
 				log.Logger.Infof("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset)
 			}
@@ -176,7 +176,7 @@ func ShouldDeactivateLight() bool {
 
 func getCurrentCondition() models.Condition {
 	return &models.SunsetSunriseCondition{
-		MinimumHours:     9,
+		MinimumHours:     8,
 		MaximumHours:     12,
 		TemperatureNight: 21,
 		TemperatureDay:   31,
