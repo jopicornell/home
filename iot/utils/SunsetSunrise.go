@@ -23,7 +23,7 @@ func SunsetSunrise(latitude float64, longitude float64, date time.Time) (sunrise
 
 func AdjustedSunriseSunset(latitude float64, longitude float64, date time.Time, minHours float64, maxHours float64) (sunrise time.Time, sunset time.Time) {
 	sunrise, sunset = SunsetSunrise(latitude, longitude, date)
-	sunrise = sunrise.Add(1 * time.Hour)
+	sunrise = sunrise.Add(2 * time.Hour)
 	maxDuration := time.Duration(maxHours * float64(time.Hour.Nanoseconds()))
 	minDuration := time.Duration(minHours * float64(time.Hour.Nanoseconds()))
 	dayDuration := MinMaxDuration(GetDayDuration(sunrise, sunset), minDuration, maxDuration)
