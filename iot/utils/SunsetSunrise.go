@@ -13,7 +13,7 @@ func SunsetSunrise(latitude float64, longitude float64, date time.Time) (sunrise
 	_, offset := date.Zone()
 	sunrise, sunset, err := sunrisesunset.GetSunriseSunset(latitude, longitude, float64(offset/int(time.Second.Seconds())), date)
 	if err != nil {
-		log.Logger.Error(err)
+		log.Logger.Errorf("Error: %+v Offset: %d", err, offset/int(time.Second.Seconds()))
 		sunrise = backupSunrise
 		sunset = backupSunset
 	}
