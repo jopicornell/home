@@ -11,8 +11,7 @@ var backupSunrise = time.Date(2009, time.November, 10, 8, 30, 0, 0, time.UTC)
 
 func SunsetSunrise(latitude float64, longitude float64, date time.Time) (sunrise time.Time, sunset time.Time) {
 	_, offset := date.Zone()
-	log.Logger.Infof("Offset: %d", offset)
-	sunrise, sunset, err := sunrisesunset.GetSunriseSunset(latitude, longitude, float64(offset), date)
+	sunrise, sunset, err := sunrisesunset.GetSunriseSunset(latitude, longitude, float64(offset/int(time.Second.Seconds())), date)
 	if err != nil {
 		log.Logger.Error(err)
 		sunrise = backupSunrise
