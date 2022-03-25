@@ -41,10 +41,12 @@ func GetDayDuration(date1, date2 time.Time) time.Duration {
 }
 
 func MinMaxDuration(duration time.Duration, minDuration time.Duration, maxDuration time.Duration) time.Duration {
-	if duration.Seconds() > maxDuration.Seconds() {
+	if duration > maxDuration {
+		log.Logger.Infof("Duration %+v is greater than max duration %+v", duration, maxDuration)
 		return maxDuration
 	}
-	if duration.Seconds() < minDuration.Seconds() {
+	if duration < minDuration {
+		log.Logger.Infof("Duration %+v is less than min duration %+v", duration, minDuration)
 		return minDuration
 	}
 	return duration
