@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="31396e12-ab10-4f78-928b-e2cd4eb2ebe9" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../iot/utils/SunsetSunrise.go" beforeDir="false" afterPath="$PROJECT_DIR$/../iot/utils/SunsetSunrise.go" afterDir="false" />
-    </list>
+    <list default="true" id="31396e12-ab10-4f78-928b-e2cd4eb2ebe9" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
