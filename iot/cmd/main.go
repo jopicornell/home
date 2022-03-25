@@ -4,6 +4,7 @@ import (
 	"bufio"
 	formatter "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/jopicornell/thermonick/models"
+	"github.com/jopicornell/thermonick/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/gpiod"
 	"github.com/yryz/ds18b20"
@@ -121,8 +122,9 @@ func ReadCommandsRoutine() {
 			if err != nil {
 				Logger.Fatal(err)
 			}
+			sunrise, sunset := utils.SunsetSunrise(39.57, 2.65, time.Now())
 			if cmd == "status\n" {
-				Logger.Infof("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp)
+				Logger.Infof("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset)
 			}
 		}
 
