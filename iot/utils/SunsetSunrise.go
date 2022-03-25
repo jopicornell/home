@@ -21,7 +21,7 @@ func SunsetSunrise(latitude float64, longitude float64, date time.Time) (sunrise
 	return MergeDateTime(date, sunrise), MergeDateTime(date, sunset)
 }
 
-func AdjustedSunriseSunset(latitude float64, longitude float64, date time.Time, maxHours float64, minHours float64) (sunrise time.Time, sunset time.Time) {
+func AdjustedSunriseSunset(latitude float64, longitude float64, date time.Time, minHours float64, maxHours float64) (sunrise time.Time, sunset time.Time) {
 	sunrise, sunset = SunsetSunrise(latitude, longitude, date)
 	sunrise = sunrise.Add(1 * time.Hour)
 	maxDuration := time.Duration(maxHours * float64(time.Hour.Nanoseconds()))
@@ -42,11 +42,9 @@ func GetDayDuration(date1, date2 time.Time) time.Duration {
 
 func MinMaxDuration(duration time.Duration, minDuration time.Duration, maxDuration time.Duration) time.Duration {
 	if duration > maxDuration {
-		log.Logger.Infof("Duration %+v is greater than max duration %+v", duration, maxDuration)
 		return maxDuration
 	}
 	if duration < minDuration {
-		log.Logger.Infof("Duration %+v is less than min duration %+v", duration, minDuration)
 		return minDuration
 	}
 	return duration
