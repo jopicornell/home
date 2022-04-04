@@ -101,7 +101,7 @@ func ReadCommandsRoutine() {
 			}
 			sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time.Now(), getCurrentCondition().GetMinHours(), getCurrentCondition().GetMaxHours())
 			if cmd == "status\n" {
-				log.Logger.Debugf("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n Light hours %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset, sunset.Sub(sunrise).Hours())
+				log.Logger.Printf("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n Light hours %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset, sunset.Sub(sunrise).Hours())
 			}
 			if cmd == "heater on\n" {
 				ActivateHeater(currentStatus.BaskingTemp)
