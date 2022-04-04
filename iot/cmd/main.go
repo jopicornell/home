@@ -12,8 +12,9 @@ import (
 )
 
 type Status struct {
-	HeaterOn    bool
-	LightOn     bool
+	HeaterOn bool
+	LightOn  bool
+
 	BaskingTemp float64
 	ColdTemp    float64
 }
@@ -23,7 +24,7 @@ var sensorNameMap = map[string]string{
 	"cold":    "28-012032cd28ce",
 }
 
-var currentStatus Status = Status{
+var currentStatus = Status{
 	HeaterOn:    false,
 	LightOn:     false,
 	BaskingTemp: 0,
@@ -31,9 +32,9 @@ var currentStatus Status = Status{
 }
 
 var HeaterLine *gpiod.Line
-var HeaterLineNumber int = 14
+var HeaterLineNumber = 14
 var LightLine *gpiod.Line
-var LightLineNumber int = 15
+var LightLineNumber = 15
 
 func main() {
 	log.CreateLoggers()
@@ -56,19 +57,20 @@ func main() {
 			time.Sleep(5 * time.Second)
 			continue
 		}
+
 		ChangeStatusTemperatures(baskingTemperature, coldTemperature)
 		if ShouldActivateHeater(baskingTemperature) {
 			ActivateHeater(baskingTemperature)
 		} else if ShouldDeactivateHeater(baskingTemperature) {
 			DeactivateHeater(baskingTemperature)
 		}
+
 		if ShouldActivateLight() {
 			ActivateLight()
 		} else if ShouldDeactivateLight() {
 			DeactivateLight()
 		}
 
-		currentStatus.ColdTemp = coldTemperature
 		time.Sleep(time.Minute)
 	}
 	//	response, err := http.Post("https://umczz0pvpc.execute-api.eu-central-1.amazonaws.com/prod/temperatures", "application/json", bytes.NewBuffer(body))
@@ -80,11 +82,11 @@ func main() {
 
 func ChangeStatusTemperatures(baskingTemperature float64, coldTemperature float64) {
 	if baskingTemperature != currentStatus.BaskingTemp {
-		log.Logger.Infof("Changed baskingTemperature: %.2f", baskingTemperature)
+		log.Logger.Debugf("Changed baskingTemperature: %.2f", baskingTemperature)
 		currentStatus.BaskingTemp = baskingTemperature
 	}
 	if coldTemperature != currentStatus.ColdTemp {
-		log.Logger.Infof("Changed cold temperature: %.2f", coldTemperature)
+		log.Logger.Debugf("Changed cold temperature: %.2f", coldTemperature)
 		currentStatus.ColdTemp = coldTemperature
 	}
 }
@@ -99,7 +101,22 @@ func ReadCommandsRoutine() {
 			}
 			sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time.Now(), getCurrentCondition().GetMinHours(), getCurrentCondition().GetMaxHours())
 			if cmd == "status\n" {
-				log.Logger.Infof("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset)
+				log.Logger.Debugf("Current status \n Heater: %v \n Light: %v \n BaskingTemp: %f \n ColdTemp: %f \n Sunrise: %s\n Sunset: %s \n Light hours %f \n", currentStatus.HeaterOn, currentStatus.LightOn, currentStatus.BaskingTemp, currentStatus.ColdTemp, sunrise, sunset, sunset.Sub(sunrise).Hours())
+			}
+			if cmd == "heater on\n" {
+				ActivateHeater(currentStatus.BaskingTemp)
+			}
+			if cmd == "heater off\n" {
+				DeactivateHeater(currentStatus.BaskingTemp)
+			}
+			if cmd == "light on\n" {
+				ActivateLight()
+			}
+			if cmd == "light off\n" {
+				DeactivateLight()
+			}
+			if cmd == "exit\n" {
+				os.Exit(0)
 			}
 		}
 
@@ -161,7 +178,7 @@ func ShouldActivateHeater(temperature float64) bool {
 
 func ShouldDeactivateHeater(temperature float64) bool {
 	condition := getCurrentCondition()
-	return currentStatus.HeaterOn && !condition.IsHeaterOn(time.Now(), temperature)
+	return currentStatus.HeaterOn && condition.IsHeaterOff(time.Now(), temperature)
 }
 
 func ShouldActivateLight() bool {
@@ -180,6 +197,8 @@ func getCurrentCondition() models.Condition {
 		MaximumHours:     12,
 		TemperatureNight: 21,
 		TemperatureDay:   31,
+		Latitude:         39.57,
+		Longitude:        2.65,
 	}
 }
 

@@ -6,28 +6,37 @@ import (
 )
 
 type SunsetSunriseCondition struct {
-	Condition
 	MinimumHours     float64 `json:"minimumHours"`
 	MaximumHours     float64 `json:"maximumHours"`
 	TemperatureNight float64 `json:"temperatureNight"`
 	TemperatureDay   float64 `json:"temperatureDay"`
+	Latitude         float64 `json:"latitude"`
+	Longitude        float64 `json:"longitude"`
 }
 
 func (c *SunsetSunriseCondition) IsHeaterOn(time time.Time, temperature float64) bool {
-	sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time, c.MinimumHours, c.MaximumHours)
+	sunrise, sunset := utils.AdjustedSunriseSunset(c.Latitude, c.Longitude, time, c.MinimumHours, c.MaximumHours)
 	if time.After(sunrise) && time.Before(sunset) {
-		return c.TemperatureDay > temperature
+		return c.TemperatureDay-1 > temperature
 	}
-	return c.TemperatureNight > temperature
+	return c.TemperatureNight-1 > temperature
+}
+
+func (c *SunsetSunriseCondition) IsHeaterOff(time time.Time, temperature float64) bool {
+	sunrise, sunset := utils.AdjustedSunriseSunset(c.Latitude, c.Longitude, time, c.MinimumHours, c.MaximumHours)
+	if time.After(sunrise) && time.Before(sunset) {
+		return c.TemperatureDay < temperature
+	}
+	return c.TemperatureNight < temperature
 }
 
 func (c *SunsetSunriseCondition) IsLightOn(time time.Time) bool {
-	sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time, c.MinimumHours, c.MaximumHours)
+	sunrise, sunset := utils.AdjustedSunriseSunset(c.Latitude, c.Longitude, time, c.MinimumHours, c.MaximumHours)
 	return time.After(sunrise) && time.Before(sunset)
 }
 
 func (c *SunsetSunriseCondition) IdealTemperature(time time.Time) float64 {
-	sunrise, sunset := utils.AdjustedSunriseSunset(39.57, 2.65, time, c.MinimumHours, c.MaximumHours)
+	sunrise, sunset := utils.AdjustedSunriseSunset(c.Latitude, c.Longitude, time, c.MinimumHours, c.MaximumHours)
 	if time.After(sunrise) && time.Before(sunset) {
 		return c.TemperatureDay
 	}
